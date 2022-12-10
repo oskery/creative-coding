@@ -18,6 +18,7 @@ body,
 
 #__next {
   display: grid;
+  grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr;
 }
 
 a {

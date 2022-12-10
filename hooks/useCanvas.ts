@@ -4,7 +4,8 @@ type DrawFunction = (ctx: CanvasRenderingContext2D, frameCount: number) => void;
 type SnapshotFunction = (ctx: CanvasRenderingContext2D) => void;
 export function useCanvas(
   drawFunctions: DrawFunction[],
-  snapshotFunction: SnapshotFunction
+  snapshotFunction: SnapshotFunction,
+  refresh?: boolean
 ) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -22,6 +23,7 @@ export function useCanvas(
       frameCount++;
 
       if (ctx) {
+        if (refresh) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         ctx.lineCap = "round";
         drawFunctions.map((draw) => draw(ctx, frameCount));
       }
@@ -29,12 +31,10 @@ export function useCanvas(
     };
     render();
 
-    // if (frameCount === 1) snapshotFunction(ctx);
-
     return () => {
       window.cancelAnimationFrame(animationFrameId);
     };
-  }, [drawFunctions, snapshotFunction]);
+  }, [drawFunctions, refresh]);
 
   useEffect(() => {
     const canvas = canvasRef?.current;

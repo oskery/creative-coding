@@ -11,9 +11,7 @@ export default function Home() {
       </Head>
 
       <H1 className="text-center fixed right-4 top-4">Creative Coding</H1>
-      <div className="grid grid-rows-3">
-        <Sverige />
-      </div>
+      <Sverige className="col-span-3" />
     </>
   );
 }

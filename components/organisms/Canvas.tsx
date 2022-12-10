@@ -1,15 +1,21 @@
 import { useCanvas } from "../../hooks";
+import { clsx } from "clsx";
+import { forwardRef } from "react";
 
 type Props = {
-  draw: (ctx: CanvasRenderingContext2D, frameCount: number) => void;
   className?: string;
 };
 
-export const Canvas: React.FC<Props> = (props) => {
-  const { draw, ...rest } = props;
-  const canvasRef = useCanvas(draw);
+const Canvas = forwardRef<HTMLCanvasElement, Props>((props, ref) => {
+  return (
+    <canvas
+      {...props}
+      ref={ref}
+      className={clsx(props?.className, "h-full w-full border")}
+    />
+  );
+});
 
-  return <canvas ref={canvasRef} {...rest} />;
-};
+Canvas.displayName = "Canvas";
 
-export default Canvas;
+export { Canvas };

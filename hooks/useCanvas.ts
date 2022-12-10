@@ -1,11 +1,13 @@
 import { useRef, useEffect } from "react";
+import colors from "tailwindcss/colors";
 
-export function useCanvas(draw: any) {
+type DrawFunction = (ctx: CanvasRenderingContext2D, frameCount: number) => void;
+export function useCanvas(drawFunctions: DrawFunction[]) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef?.current;
-    const context = canvas?.getContext("2d");
+    const ctx = canvas?.getContext("2d");
     let frameCount = 0;
     let animationFrameId: number;
     var rect = canvas?.getBoundingClientRect();
@@ -15,7 +17,16 @@ export function useCanvas(draw: any) {
     }
     const render = () => {
       frameCount++;
-      draw(context, frameCount);
+
+      if (ctx) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.fillStyle = colors.emerald[500];
+        ctx.lineCap = "round";
+        ctx.font = "64px Helvetica";
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = colors.red[500];
+        drawFunctions.map((draw) => draw(ctx, frameCount));
+      }
       animationFrameId = window.requestAnimationFrame(render);
     };
     render();
@@ -23,7 +34,7 @@ export function useCanvas(draw: any) {
     return () => {
       window.cancelAnimationFrame(animationFrameId);
     };
-  }, [draw]);
+  }, [drawFunctions]);
 
   return canvasRef;
 }

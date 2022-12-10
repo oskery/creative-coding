@@ -1,37 +1,7 @@
 import Head from "next/head";
-import { Canvas, Card, H1 } from "../components";
-import { useCanvas } from "../hooks";
-import { useState } from "react";
+import { H1, Sverige } from "../components";
 
 export default function Home() {
-  const [text, setText] = useState("Hello World");
-
-  function drawCircle(ctx: CanvasRenderingContext2D, frameCount: number) {
-    ctx.beginPath();
-    ctx.arc(50, 100, 20 * Math.sin(frameCount * 0.05) ** 2, 0, 2 * Math.PI);
-    ctx.fill();
-  }
-
-  function drawText(ctx: CanvasRenderingContext2D, frameCount: number) {
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, ctx.canvas.width / 2, ctx.canvas.height / 2);
-  }
-
-  function drawLine(ctx: CanvasRenderingContext2D, frameCount: number) {
-    ctx.beginPath();
-    ctx.moveTo(ctx.canvas.width / 2, 0);
-    ctx.lineTo(ctx.canvas.width / 2, ctx.canvas.height);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(0, ctx.canvas.height / 2);
-    ctx.lineTo(ctx.canvas.width, ctx.canvas.height / 2);
-    ctx.stroke();
-  }
-
-  const canvasRef = useCanvas([drawCircle, drawLine, drawText]);
-
   return (
     <>
       <Head>
@@ -40,10 +10,9 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <H1 className="text-center">Creative Coding</H1>
-      <input value={text} onChange={(e) => setText(e.target.value)} />
-      <div className="grid">
-        <Canvas ref={canvasRef} />
+      <H1 className="text-center fixed right-4 top-4">Creative Coding</H1>
+      <div className="grid grid-rows-3">
+        <Sverige />
       </div>
     </>
   );

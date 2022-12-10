@@ -11,7 +11,7 @@ const Canvas = forwardRef<HTMLCanvasElement, Props>((props, ref) => {
     <canvas
       {...props}
       ref={ref}
-      className={clsx(props?.className, "h-full w-full border")}
+      className={clsx(props?.className, "h-full w-full")}
     />
   );
 });

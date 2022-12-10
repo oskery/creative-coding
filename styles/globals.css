@@ -18,8 +18,6 @@ body,
 
 #__next {
   display: grid;
-  padding: 2rem;
-  grid-template-rows: auto 1fr;
 }
 
 a {

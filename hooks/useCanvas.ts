@@ -10,15 +10,19 @@ export function useCanvas(
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    const handleResize = (canvas: HTMLCanvasElement | null, rect?: DOMRect) => {
+      if (!canvas || !rect) return;
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    };
+
     const canvas = canvasRef?.current;
     const ctx = canvas?.getContext("2d");
     let frameCount = 0;
     let animationFrameId: number;
     var rect = canvas?.getBoundingClientRect();
-    if (canvas && rect) {
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-    }
+    handleResize(canvas, rect);
+
     const render = () => {
       frameCount++;
 
@@ -33,6 +37,11 @@ export function useCanvas(
 
     return () => {
       window.cancelAnimationFrame(animationFrameId);
+      window.addEventListener(
+        "resize",
+        () => handleResize(canvas, rect),
+        false
+      );
     };
   }, [drawFunctions, refresh]);
 

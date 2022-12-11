@@ -7,11 +7,11 @@ import colors from "tailwindcss/colors";
 import { clsx } from "clsx";
 
 export function Sverige({ className }: { className?: string }) {
-  const [text, setText] = useState("Sveden!");
-  const [snapshot, setSnapshot] = useState<Uint8ClampedArray>();
+  let snapshot = null;
+  // const [[coords, rgbs], takeSnapshot] = useState<Uint8ClampedArray[]>([]); // One array for colors, one for coordinates
 
   useEffect(() => {
-    console.log(snapshot);
+    console.log("rerender");
   }, [snapshot]);
 
   // function drawCircle(ctx: CanvasRenderingContext2D, frameCount: number) {
@@ -23,15 +23,24 @@ export function Sverige({ className }: { className?: string }) {
   // }
 
   function drawText(ctx: CanvasRenderingContext2D, frameCount: number) {
+    if (frameCount > 1) return;
     ctx.font = "110px Helvetica";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillStyle = colors.blue[700];
-
-    ctx.fillText(text, ctx.canvas.width / 2, ctx.canvas.height / 2);
+    console.log("hej");
+    ctx.fillText("Sverige", ctx.canvas.width / 2, ctx.canvas.height / 2);
+    const snap = ctx.getImageData(
+      0,
+      0,
+      ctx.canvas.width,
+      ctx.canvas.height
+    ).data;
+    snapshot = [snap, snap];
   }
 
   function drawLine(ctx: CanvasRenderingContext2D, frameCount: number) {
+    if (frameCount > 1) return;
     ctx.lineWidth = 130;
     ctx.strokeStyle = colors.yellow[500];
 
@@ -47,24 +56,40 @@ export function Sverige({ className }: { className?: string }) {
   }
 
   function pixelate(ctx: CanvasRenderingContext2D, frameCount: number) {
-    if (!snapshot) return;
-    // ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    const gap = 15;
-    const w = gap * 0.9;
-    const h = gap * 0.8;
+    if (!snapshot?.length) return;
+    const [coords, rgbs] = snapshot;
+    // We only want to have a snapshot of the canvas once, so we clear it after
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    const ease = Math.random() * 0.1 + 0.005;
+
+    const gap = 12;
+    const w = gap;
+    const h = gap;
     for (let y = 0; y < ctx.canvas.height; y += gap) {
       for (let x = 0; x < ctx.canvas.width; x += gap) {
         const i = (y * ctx.canvas.width + x) * 4;
-        const alpha = snapshot[i + 3];
+        const alpha = rgbs[i + 3];
         if (alpha > 0) {
-          const [r, g, b] = [snapshot[i], snapshot[i + 1], snapshot[i + 2]];
+          if (frameCount === 1) {
+            ctx.fillStyle = "#FFF";
+            ctx.fillRect(Math.random() * x, Math.random() * y, w, h);
+          } else {
+            const [originX, originY] = [coords[i], coords[i + 1]];
+            const [r, g, b] = [rgbs[i], rgbs[i + 1], rgbs[i + 2]];
+            ctx.fillStyle = colors.blue[100];
+            // if (x === 0) console.log(originX);
+            ctx.fillRect(
+              x + (originX - x) * 0.2,
+              y + (originY - y) * 0.2,
+              w,
+              h
+            );
+          }
+          const [r, g, b] = [rgbs[i], rgbs[i + 1], rgbs[i + 2]];
 
           // IF YELLOW
-          if (rgbToHex([r, g, b]) === colors.yellow[500])
-            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-
-          ctx.fillRect(x, y, w, h);
-          console.log(rgbToHex([r, g, b]) === colors.yellow[500]);
+          const isYellow = rgbToHex([r, g, b]) === colors.yellow[500];
+          if (isYellow) ctx.fillStyle = colors.yellow[800];
         }
       }
     }
@@ -81,14 +106,7 @@ export function Sverige({ className }: { className?: string }) {
   // Månen
   //
 
-  const canvasRef = useCanvas(
-    [drawLine, drawText, pixelate],
-    (ctx) =>
-      setSnapshot(
-        ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height).data
-      ),
-    true
-  );
+  const canvasRef = useCanvas([drawLine, drawText, pixelate], true);
 
   return (
     <Canvas ref={canvasRef} className={clsx(className, "bg-blue-900 ring")} />

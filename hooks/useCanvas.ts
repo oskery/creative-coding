@@ -1,12 +1,7 @@
 import { useRef, useEffect } from "react";
 
 type DrawFunction = (ctx: CanvasRenderingContext2D, frameCount: number) => void;
-type SnapshotFunction = (ctx: CanvasRenderingContext2D) => void;
-export function useCanvas(
-  drawFunctions: DrawFunction[],
-  snapshotFunction: SnapshotFunction,
-  refresh?: boolean
-) {
+export function useCanvas(drawFunctions: DrawFunction[], refresh?: boolean) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -44,12 +39,6 @@ export function useCanvas(
       );
     };
   }, [drawFunctions, refresh]);
-
-  useEffect(() => {
-    const canvas = canvasRef?.current;
-    const ctx = canvas?.getContext("2d");
-    if (ctx) snapshotFunction(ctx);
-  }, []);
 
   return canvasRef;
 }

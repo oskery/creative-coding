@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 
 type DrawFunction = (ctx: CanvasRenderingContext2D, frameCount: number) => void;
-export function useCanvas(drawFunctions: DrawFunction[], refresh?: boolean) {
+export function useCanvas(drawFunctions: DrawFunction[]) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -22,7 +22,6 @@ export function useCanvas(drawFunctions: DrawFunction[], refresh?: boolean) {
       frameCount++;
 
       if (ctx) {
-        if (refresh) ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         ctx.lineCap = "round";
         drawFunctions.map((draw) => draw(ctx, frameCount));
       }
@@ -38,7 +37,7 @@ export function useCanvas(drawFunctions: DrawFunction[], refresh?: boolean) {
         false
       );
     };
-  }, [drawFunctions, refresh]);
+  }, [drawFunctions]);
 
   return canvasRef;
 }

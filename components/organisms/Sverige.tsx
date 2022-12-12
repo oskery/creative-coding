@@ -1,43 +1,45 @@
 import Head from "next/head";
-import { Canvas, Card, H1 } from "../";
+import { Canvas } from "../";
 import { useCanvas } from "../../hooks";
-import { useState, useEffect } from "react";
-import colors, { current } from "tailwindcss/colors";
+import colors from "tailwindcss/colors";
 
 import { clsx } from "clsx";
+export class Particle {
+  ctx: CanvasRenderingContext2D;
+  x: number;
+  y: number;
+  targetX: number;
+  targetY: number;
+  color: string;
+  ease: number;
 
-export function Sverige({ className }: { className?: string }) {
-  let firstPicture = null;
-  let currentPicture = null;
-  // const [[coords, rgbs], takeSnapshot] = useState<Uint8ClampedArray[]>([]); // One array for colors, one for coordinates
-
-  // function drawCircle(ctx: CanvasRenderingContext2D, frameCount: number) {
-  //   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-  //   ctx.beginPath();
-  //   ctx.arc(50, 100, 140 * Math.sin(frameCount * 0.05) ** 2, 0, 2 * Math.PI);
-  //   ctx.fill();
-  // }
-
-  function drawText(ctx: CanvasRenderingContext2D, frameCount: number) {
-    if (frameCount > 1) return;
-    ctx.font = "110px Helvetica";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = colors.blue[700];
-    ctx.fillText("Sverige", ctx.canvas.width / 2, ctx.canvas.height / 2);
-    const snap = ctx.getImageData(
-      0,
-      0,
-      ctx.canvas.width,
-      ctx.canvas.height
-    ).data;
-    firstPicture = Object.assign([], [snap, snap]);
-    currentPicture = Object.assign([], snap);
+  constructor(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    color: string
+  ) {
+    this.ctx = ctx;
+    this.x = Math.random() * ctx.canvas.width;
+    this.y = Math.random() * ctx.canvas.height;
+    this.targetX = x;
+    this.targetY = y;
+    this.color = color;
+    this.ease = Math.random() * 0.01 + 0.08;
   }
+  draw() {
+    this.ctx.fillStyle = this.color;
+    this.ctx.fillRect(this.x, this.y, 8, 8);
+  }
+  update() {
+    this.x += (this.targetX - this.x) * this.ease;
+    this.y += (this.targetY - this.y) * this.ease;
+  }
+}
+export function Sverige({ className }: { className?: string }) {
+  const particles = [] as Particle[];
 
-  function drawLine(ctx: CanvasRenderingContext2D, frameCount: number) {
-    if (frameCount > 1) return;
+  function drawLine(ctx: CanvasRenderingContext2D) {
     ctx.lineWidth = 130;
     ctx.strokeStyle = colors.yellow[500];
 
@@ -52,43 +54,54 @@ export function Sverige({ className }: { className?: string }) {
     ctx.stroke();
   }
 
-  function pixelate(ctx: CanvasRenderingContext2D, frameCount: number) {
-    if (!firstPicture?.length) return;
-    const [coords, rgbs] = firstPicture;
-    // We only want to have a snapshot of the canvas once, so we clear it after
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    const ease = Math.random() * 0.1 + 0.005;
+  function drawText(ctx: CanvasRenderingContext2D) {
+    ctx.font = "110px Helvetica";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = colors.blue[700];
+    ctx.fillText("Sverige", ctx.canvas.width / 2, ctx.canvas.height / 2);
+  }
 
+  function paintPictureAndGenerateParticles(
+    ctx: CanvasRenderingContext2D,
+    frameCount: number
+  ) {
+    if (frameCount > 1) return;
+    drawLine(ctx);
+    drawText(ctx);
+    let snapshot = ctx.getImageData(
+      0,
+      0,
+      ctx.canvas.width,
+      ctx.canvas.height
+    ).data;
+    generateParticles(ctx, snapshot);
+  }
+
+  function generateParticles(
+    ctx: CanvasRenderingContext2D,
+    rgbs: Uint8ClampedArray
+  ) {
     const gap = 12;
-    const w = gap;
-    const h = gap;
     for (let y = 0; y < ctx.canvas.height; y += gap) {
       for (let x = 0; x < ctx.canvas.width; x += gap) {
         const i = (y * ctx.canvas.width + x) * 4;
-        const alpha = rgbs[i + 3];
-        if (alpha > 0) {
-          if (frameCount === 1) {
-            ctx.fillStyle = "#FFF";
-            ctx.fillRect(Math.random() * x, Math.random() * y, w, h);
-          } else {
-            const [originX, originY] = [coords[i], coords[i + 1]];
-            const [r, g, b] = [rgbs[i], rgbs[i + 1], rgbs[i + 2]];
-            ctx.fillStyle = colors.blue[100];
-            currentPicture[i] =
-              currentPicture[i] + (originX - currentPicture[i]);
-            currentPicture[i + 1] =
-              currentPicture[i + 1] + (originY - currentPicture[i + 1]);
-            // if (x === 0) console.log(originX);
-            ctx.fillRect(currentPicture[i], currentPicture[i + 1], w, h);
-          }
-          const [r, g, b] = [rgbs[i], rgbs[i + 1], rgbs[i + 2]];
-
-          // IF YELLOW
-          const isYellow = rgbToHex([r, g, b]) === colors.yellow[500];
-          if (isYellow) ctx.fillStyle = colors.yellow[800];
+        // Only if there was a color do we make a Particle (rgbs[i + 3] = alpha)
+        if (rgbs[i + 3] > 0) {
+          ctx.fillStyle = colors.blue[100];
+          const color = rgbToHex(rgbs[i], rgbs[i + 1], rgbs[i + 2]);
+          particles.push(new Particle(ctx, x, y, color));
         }
       }
     }
+  }
+
+  function generateParticlesAndAnimate(ctx: CanvasRenderingContext2D) {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    particles.forEach((p) => {
+      p.update();
+      p.draw();
+    });
   }
 
   // Hus blått, elpriser
@@ -102,21 +115,17 @@ export function Sverige({ className }: { className?: string }) {
   // Månen
   //
 
-  const canvasRef = useCanvas([drawLine, drawText, pixelate], true);
+  const canvasRef = useCanvas([
+    paintPictureAndGenerateParticles,
+    generateParticlesAndAnimate,
+  ]);
 
   return (
     <Canvas ref={canvasRef} className={clsx(className, "bg-blue-900 ring")} />
   );
 }
-function hexToRgb(hex: string) {
-  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return `rgb(${parseInt(result?.[1] || "", 16)}, ${parseInt(
-    result?.[2] || "",
-    16
-  )}, ${parseInt(result?.[3] || "", 16)})`;
-}
 
-function rgbToHex([r, g, b]: number[]) {
+function rgbToHex(r: number, g: number, b: number) {
   function componentToHex(c: number) {
     var hex = c.toString(16);
     return hex.length == 1 ? "0" + hex : hex;

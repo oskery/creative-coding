@@ -2,17 +2,14 @@ import Head from "next/head";
 import { Canvas, Card, H1 } from "../";
 import { useCanvas } from "../../hooks";
 import { useState, useEffect } from "react";
-import colors from "tailwindcss/colors";
+import colors, { current } from "tailwindcss/colors";
 
 import { clsx } from "clsx";
 
 export function Sverige({ className }: { className?: string }) {
-  let snapshot = null;
+  let firstPicture = null;
+  let currentPicture = null;
   // const [[coords, rgbs], takeSnapshot] = useState<Uint8ClampedArray[]>([]); // One array for colors, one for coordinates
-
-  useEffect(() => {
-    console.log("rerender");
-  }, [snapshot]);
 
   // function drawCircle(ctx: CanvasRenderingContext2D, frameCount: number) {
   //   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -28,7 +25,6 @@ export function Sverige({ className }: { className?: string }) {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillStyle = colors.blue[700];
-    console.log("hej");
     ctx.fillText("Sverige", ctx.canvas.width / 2, ctx.canvas.height / 2);
     const snap = ctx.getImageData(
       0,
@@ -36,7 +32,8 @@ export function Sverige({ className }: { className?: string }) {
       ctx.canvas.width,
       ctx.canvas.height
     ).data;
-    snapshot = [snap, snap];
+    firstPicture = Object.assign([], [snap, snap]);
+    currentPicture = Object.assign([], snap);
   }
 
   function drawLine(ctx: CanvasRenderingContext2D, frameCount: number) {
@@ -56,8 +53,8 @@ export function Sverige({ className }: { className?: string }) {
   }
 
   function pixelate(ctx: CanvasRenderingContext2D, frameCount: number) {
-    if (!snapshot?.length) return;
-    const [coords, rgbs] = snapshot;
+    if (!firstPicture?.length) return;
+    const [coords, rgbs] = firstPicture;
     // We only want to have a snapshot of the canvas once, so we clear it after
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     const ease = Math.random() * 0.1 + 0.005;
@@ -77,13 +74,12 @@ export function Sverige({ className }: { className?: string }) {
             const [originX, originY] = [coords[i], coords[i + 1]];
             const [r, g, b] = [rgbs[i], rgbs[i + 1], rgbs[i + 2]];
             ctx.fillStyle = colors.blue[100];
+            currentPicture[i] =
+              currentPicture[i] + (originX - currentPicture[i]);
+            currentPicture[i + 1] =
+              currentPicture[i + 1] + (originY - currentPicture[i + 1]);
             // if (x === 0) console.log(originX);
-            ctx.fillRect(
-              x + (originX - x) * 0.2,
-              y + (originY - y) * 0.2,
-              w,
-              h
-            );
+            ctx.fillRect(currentPicture[i], currentPicture[i + 1], w, h);
           }
           const [r, g, b] = [rgbs[i], rgbs[i + 1], rgbs[i + 2]];
 
